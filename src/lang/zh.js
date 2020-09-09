@@ -62,7 +62,11 @@ export default {
     clipboardDemo: 'Clipboard',
     i18n: '国际化',
     externalLink: '外链',
-    profile: '个人中心'
+    profile: '个人中心',
+    trackingElement: '埋点元素',
+    trackingConfig: '埋点配置',
+    trackingElementConfig: '埋点元素配置',
+    TrackingDimensionConfig: '采集维度配置'
   },
   navbar: {
     dashboard: '首页',
@@ -171,5 +175,19 @@ export default {
     tagsView: '开启 Tags-View',
     fixedHeader: '固定 Header',
     sidebarLogo: '侧边栏 Logo'
+  },
+  trackingElement: {
+    id: 'ID',
+    elementCode: '元素代号',
+    belongElementCode: '归属元素代号',
+    elementName: '元素名称',
+    elementType: '元素类型',
+    elementRoute: '元素路由',
+    elementEven: '元素事件',
+    elementEvenResult: '元素事件结果',
+    elementDescribe: '元素描述',
+    disableStatus: '禁用状态',
+    createTime: '创建时间',
+    updateTime: '更新时间'
   }
 }

@@ -25,6 +25,7 @@ import externalLinkRouter from '@/router/modules/externalLinkRouter'
 import iconRouter from '@/router/modules/iconRouter'
 import permissionRouter from '@/router/modules/permissionRouter'
 import notFoundtRouter from '@/router/modules/notFoundRouter'
+import trackingConfigRouter from '@/router/modules/TrackingConfigRouter'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -144,24 +145,25 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   /** when your routing map is too long, you can split it into small modules **/
-  permissionRouter,
-  componentsRouter,
-  iconRouter,
-  chartsRouter,
-  nestedRouter,
-  tableRouter,
-  errorRouter,
-  exampleRouter,
-  tabRouter,
-  errorLogRouter,
-  excelRouter,
-  zipRouter,
-  pdfRouter,
-  themeRouter,
-  clipboardRouter,
-  i18nRouter,
-  externalLinkRouter,
+  // permissionRouter,
+  // componentsRouter,
+  // iconRouter,
+  // chartsRouter,
+  // nestedRouter,
+  // tableRouter,
+  // errorRouter,
+  // exampleRouter,
+  // tabRouter,
+  // errorLogRouter,
+  // excelRouter,
+  // zipRouter,
+  // pdfRouter,
+  // themeRouter,
+  // clipboardRouter,
+  // i18nRouter,
+  // externalLinkRouter,
   // 404 page must be placed at the end !!!
+  trackingConfigRouter,
   notFoundtRouter
 
 ]
