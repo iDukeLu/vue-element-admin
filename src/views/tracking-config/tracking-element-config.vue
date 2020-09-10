@@ -3,10 +3,10 @@
     <div class="filter-container">
       <el-input v-model="listQuery.elementName" :placeholder="$t('trackingElement.elementName')" clearable style="width: 200px; margin-right: 15px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="listQuery.elementType" :placeholder="$t('trackingElement.elementType')" clearable style="width: 150px; margin-right: 15px;" class="filter-item">
-        <el-option v-for="item in elementTypeOptions" :key="item" :label="item.display_name" :value="item.value" />
+        <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
       </el-select>
       <el-select v-model="listQuery.elementEven" :placeholder="$t('trackingElement.elementEven')" clearable class="filter-item" style="width: 150px; margin-right: 15px;">
-        <el-option v-for="item in elementEvenOptions" :key="item" :label="item.display_name" :value="item.value" />
+        <el-option v-for="(item, index) in elementEvenOptions" :key="index" :label="item.display_name" :value="item.value" />
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t('table.search') }}
@@ -107,7 +107,7 @@
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="trackingElementTemp" label-position="left" label-width="100px" style="width: 800px; margin-left:50px;">
         <el-form-item :label="$t('trackingElement.elementType')">
-          <el-select v-model="trackingElementTemp.elementType" style="width: 700px;" class="filter-item" placeholder="请选择埋点元素类型">
+          <el-select v-model="trackingElementTemp.elementType" style="width: 700px;" class="filter-item" placeholder="请选择埋点元素类型" @change="handlerElementEven">
             <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
           </el-select>
         </el-form-item>
@@ -125,9 +125,17 @@
         <el-form-item v-show="trackingElementTemp.elementType === 'page'" :label="$t('trackingElement.elementRoute')" prop="elementRoute">
           <el-input v-model="trackingElementTemp.elementRoute" placeholder="埋点元素的路由" />
         </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementEven')" prop="elementEven">
-          <el-input v-model="trackingElementTemp.elementEven" placeholder="埋点元素触发的事件" @change="getElementEvenByElementCode()" />
+
+        <el-form-item :label="$t('trackingElement.elementEven')">
+          <el-select v-model="trackingElementTemp.elementEven" disabled style="width: 700px;" class="filter-item" placeholder="请选择埋点元素触发的事件">
+            <el-option v-for="(item, index) in elementEvenOptions" :key="index" :label="item.display_name" :value="item.value" />
+          </el-select>
         </el-form-item>
+
+        <!-- <el-form-item :label="$t('trackingElement.elementEven')" prop="elementEven">
+          <el-input v-model="trackingElementTemp.elementEven" placeholder="埋点元素触发的事件" />
+        </el-form-item> -->
+
         <el-form-item :label="$t('trackingElement.elementEvenResult')" prop="elementEvenResult">
           <el-input v-model="trackingElementTemp.elementEvenResult" placeholder="埋点元素触发事件的结果" />
         </el-form-item>
@@ -178,17 +186,6 @@ const elementEvenOptions = [
 const disableStatusOptions = [
   { display_name: '启用', value: 0 },
   { display_name: '禁用', value: 1 }
-]
-
-const elementTypeEvenOptions = [
-  { page: '浏览' },
-  { button: '点击' },
-  { input: '点击' },
-  { select: '点击' }
-  // { elementType: 'page', elementEven: '浏览' },
-  // { elementType: 'button', elementEven: '点击' },
-  // { elementType: 'input', elementEven: '点击' },
-  // { elementType: 'select', elementEven: '点击' }
 ]
 
 // arr to obj, such as { CN : "China", US : "USA" }
@@ -248,7 +245,6 @@ export default {
       elementTypeKeyValue,
       elementEvenKeyValue,
       disableStatusKeyValue,
-      elementTypeEvenOptions,
       statusOptions: ['published', 'draft', 'deleted'],
       showReviewer: false,
       temp: {
@@ -267,7 +263,7 @@ export default {
         belongElementCode: '',
         elementType: 'page',
         elementRoute: '',
-        elementEven: '',
+        elementEven: 'visit',
         elementEvenResult: '',
         elementDescribe: '',
         disableStatus: 0
@@ -316,12 +312,11 @@ export default {
         // Just to simulate the time of the request
         setTimeout(() => {
           this.listLoading = false
-        }, 1.5 * 1000)
+        }, 0.1 * 1000)
       })
     },
-    getElementEvenByElementCode() {
-      console.log('1111')
-      this.trackingElementTemp.elementEven = this.trackingElementTemp.elementType === 'page' ? 'visit' : 'click'
+    handlerElementEven(e) {
+      this.trackingElementTemp.elementEven = e === 'page' ? 'visit' : 'click'
     },
     handleFilter() {
       this.listQuery.page = 1
