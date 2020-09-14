@@ -2,13 +2,27 @@
   <div class="app-container">
     <!-- 功能区 -->
     <div class="filter-container">
-      <el-input v-model="pageQuery.elementName" :placeholder="$t('trackingElement.elementName')" clearable style="width: 200px; margin-right: 15px;" class="filter-item" @keyup.enter.native="handleFilter" />
-      <el-select v-model="pageQuery.elementType" :placeholder="$t('trackingElement.elementType')" clearable style="width: 150px; margin-right: 15px;" class="filter-item">
-        <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
+      <el-select v-model="pageQuery.cleanStatus" :placeholder="$t('trackingRecord.cleanStatus')" clearable style="width: 150px; margin-right: 15px;" class="filter-item">
+        <el-option v-for="(item, index) in cleanStatusOptions" :key="index" :label="item.display_name" :value="item.value" />
       </el-select>
-      <el-select v-model="pageQuery.elementEven" :placeholder="$t('trackingElement.elementEven')" clearable class="filter-item" style="width: 150px; margin-right: 15px;">
-        <el-option v-for="(item, index) in elementEvenOptions" :key="index" :label="item.display_name" :value="item.value" />
-      </el-select>
+      <el-date-picker
+        v-model="pageQuery.startTime"
+        class="filter-item"
+        style="margin-right: 15px;"
+        type="datetime"
+        placeholder="开始时间"
+        default-time="00:00:00"
+        value-format="yyyy-MM-dd HH:mm:ss"
+      />
+      <el-date-picker
+        v-model="pageQuery.endTime"
+        class="filter-item"
+        style="margin-right: 15px;"
+        type="datetime"
+        placeholder="结束时间"
+        default-time="00:00:00"
+        value-format="yyyy-MM-dd HH:mm:ss"
+      />
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
         {{ $t('table.search') }}
       </el-button>
@@ -23,154 +37,68 @@
     <el-table
       :key="tableKey"
       v-loading="listLoading"
-      :data="trackingElementList"
+      :data="trackingRecordList"
       border
       fit
       highlight-current-row
       style="width: 100%;"
       @sort-change="sortChange"
     >
-      <el-table-column :label="$t('trackingElement.id')" prop="id" sortable="custom" align="center" width="170" :class-name="getSortClass('id')">
+      <el-table-column :label="$t('trackingRecord.id')" prop="id" sortable="custom" align="center" width="170" :class-name="getSortClass('id')">
         <template slot-scope="{row}">
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
 
-      <el-table-column :label="$t('trackingElement.elementCode')" min-width="400px">
+      <el-table-column :label="$t('trackingRecord.data')" min-width="600px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.elementCode }}</span>
+          <span class="link-type" @click="handleUpdate(row)">{{ row.data }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('trackingElement.belongElementCode')" min-width="320px">
+      <el-table-column :label="$t('trackingRecord.startTime')" min-width="170px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.belongElementCode }}</span>
+          <span class="link-type">{{ row.startTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementName')" min-width="300px">
+      <el-table-column :label="$t('trackingRecord.endTime')" min-width="170px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.elementName }}</span>
+          <span class="link-type">{{ row.endTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementType')" min-width="80px">
+      <el-table-column :label="$t('trackingRecord.cleanStatus')" min-width="320px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ elementTypeKeyValue[row.elementType] }}</span>
+          <span class="link-type">{{ cleanStatusKeyValue[row.cleanStatus] }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementRoute')" min-width="320px">
+      <el-table-column :label="$t('trackingRecord.cleanResult')" min-width="300px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.elementRoute }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementEven')" min-width="80px">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ elementEvenKeyValue[row.elementEven] }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementEvenResult')" min-width="320px">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.elementEvenResult }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementDescribe')" min-width="270px">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.elementDescribe }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('trackingElement.disableStatus')" min-width="80px">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ disableStatusKeyValue[row.disableStatus] }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('trackingElement.createTime')" min-width="170px">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.createTime }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('trackingElement.updateTime')" min-width="170px">
-        <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.updateTime }}</span>
+          <span class="link-type">{{ row.cleanResult }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.actions')" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
-            {{ $t('table.edit') }}
+            {{ $t('table.clean') }}
           </el-button>
-          <!--          <el-button v-if="row.status!='deleted'" size="mini" type="danger" >-->
-          <!--            {{ $t('table.delete') }}-->
-          <!--          </el-button>-->
-          <el-popconfirm title="确定删除该元素吗？" @onConfirm="handleDelete(row,$index)">
-            <el-button v-if="row.status!='deleted'" slot="reference" size="mini" type="danger">
-              {{ $t('table.delete') }}
-            </el-button>
-          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
     <!-- 分页栏 -->
-    <pagination v-if="total>0" :total="total" :page.sync="pageQuery.current" :limit.sync="pageQuery.limit" @pagination="pageTrackingElement" />
-
-    <!-- 添加/修改表单 -->
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="trackingElementTemp" label-position="left" label-width="120px" style="width: 800px; margin-left:50px;">
-        <el-form-item :label="$t('trackingElement.elementType')" prop="elementType">
-          <el-select v-model="trackingElementTemp.elementType" style="width: 680px;" class="filter-item" placeholder="请选择埋点元素类型" @change="handlerElementType">
-            <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item v-if="trackingElementTemp.elementType !== 'page'" :label="$t('trackingElement.belongElementCode')" prop="belongElementCode">
-          <el-select v-model="trackingElementTemp.belongElementCode" style="width: 680px;" class="filter-item" placeholder="请选择归属的埋点元素" @focus="listTrackingElement" @change="handlerBelongElementCode">
-            <el-option v-for="(item, index) in belongTrackingElementList" :key="index" :label="item.elementName" :value="item.elementCode" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementCode')" prop="elementCode">
-          <el-input v-model="trackingElementTemp.elementCode" placeholder="埋点元素的唯一编号" @change="handlerElementCode" />
-        </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementName')" prop="elementName">
-          <el-input v-model="trackingElementTemp.elementName" placeholder="埋点元素的名称" />
-        </el-form-item>
-        <el-form-item v-if="trackingElementTemp.elementType === 'page'" :label="$t('trackingElement.elementRoute')" prop="elementRoute">
-          <el-input v-model="trackingElementTemp.elementRoute" placeholder="埋点元素的路由" />
-        </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementEven')" prop="elementEven">
-          <el-select v-model="trackingElementTemp.elementEven" disabled style="width: 680px;" class="filter-item" placeholder="请选择埋点元素触发的事件">
-            <el-option v-for="(item, index) in elementEvenOptions" :key="index" :label="item.display_name" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementEvenResult')" prop="elementEvenResult">
-          <el-input v-model="trackingElementTemp.elementEvenResult" placeholder="埋点元素触发事件的结果" />
-        </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementDescribe')" prop="elementDescribe">
-          <el-input v-model="trackingElementTemp.elementDescribe" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" placeholder="请输入对埋点元素的相关描述" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">
-          {{ $t('table.cancel') }}
-        </el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
-          {{ $t('table.confirm') }}
-        </el-button>
-      </div>
-    </el-dialog>
-
-    <el-dialog :visible.sync="dialogPvVisible" title="Reading statistics">
-      <el-table :data="pvData" border fit highlight-current-row style="width: 100%">
-        <el-table-column prop="key" label="Channel" />
-        <el-table-column prop="pv" label="Pv" />
-      </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogPvVisible = false">{{ $t('table.confirm') }}</el-button>
-      </span>
-    </el-dialog>
+    <pagination v-if="total>0" :total="total" :page.sync="pageQuery.current" :limit.sync="pageQuery.limit" @pagination="pageTrackingRecord" />
   </div>
 </template>
 
 <script>
-import { pageTrackingElement, listTrackingElement, createTrackingElement, deleteTrackingElement, updateTrackingElement } from '@/api/tracking-element-config'
+import { pageTrackingRecord, listTrackingElement, createTrackingElement, deleteTrackingElement, updateTrackingElement } from '@/api/tracking-original-data'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+
+const cleanStatusOptions = [
+  { display_name: '未清洗', value: 0 },
+  { display_name: '清洗失败', value: -1 },
+  { display_name: '清洗成功', value: 1 }
+]
 
 const elementTypeOptions = [
   { display_name: '页面', value: 'page' },
@@ -188,6 +116,12 @@ const disableStatusOptions = [
   { display_name: '启用', value: 0 },
   { display_name: '禁用', value: 1 }
 ]
+
+// arr to obj, such as { CN : "China", US : "USA" }
+const cleanStatusKeyValue = cleanStatusOptions.reduce((acc, cur) => {
+  acc[cur.value] = cur.display_name
+  return acc
+}, {})
 
 // arr to obj, such as { CN : "China", US : "USA" }
 const elementTypeKeyValue = elementTypeOptions.reduce((acc, cur) => {
@@ -208,7 +142,7 @@ const disableStatusKeyValue = disableStatusOptions.reduce((acc, cur) => {
 }, {})
 
 export default {
-  name: 'TrackingElementConfig',
+  name: 'TrackingOriginalData',
   components: { Pagination },
   directives: { waves },
   filters: {
@@ -227,7 +161,7 @@ export default {
   data() {
     return {
       tableKey: 0,
-      trackingElementList: [],
+      trackingRecordList: [],
       belongTrackingElementList: [],
       total: 0,
       listLoading: true,
@@ -235,9 +169,9 @@ export default {
         current: 1,
         limit: 10,
         sort: '+id',
-        elementName: '',
-        elementType: '',
-        elementEven: ''
+        cleanStatus: '',
+        startTime: '',
+        endTime: ''
       },
       listQuery: {
         elementName: '',
@@ -249,6 +183,8 @@ export default {
       elementTypeKeyValue,
       elementEvenKeyValue,
       disableStatusKeyValue,
+      cleanStatusOptions,
+      cleanStatusKeyValue,
       statusOptions: ['published', 'draft', 'deleted'],
       showReviewer: false,
       trackingElementTemp: {
@@ -263,19 +199,13 @@ export default {
         elementDescribe: '',
         disableStatus: 0
       },
-      trackingElement: {
+      trackingRecord: {
         id: '',
-        elementCode: '',
-        elementName: '',
-        belongElementCode: '',
-        elementType: '',
-        elementRoute: '',
-        elementEven: '',
-        elementEvenResult: '',
-        elementDescribe: '',
-        disableStatus: '',
-        createTime: '',
-        updateTime: ''
+        data: '',
+        startTime: '',
+        endTime: '',
+        cleanStatus: '',
+        cleanResult: ''
       },
       dialogFormVisible: false,
       dialogStatus: '',
@@ -299,13 +229,13 @@ export default {
     }
   },
   created() {
-    this.pageTrackingElement()
+    this.pageTrackingRecord()
   },
   methods: {
-    pageTrackingElement() {
+    pageTrackingRecord() {
       this.listLoading = true
-      pageTrackingElement(this.pageQuery).then(response => {
-        this.trackingElementList = response.data.records
+      pageTrackingRecord(this.pageQuery).then(response => {
+        this.trackingRecordList = response.data.records
         this.total = response.data.total
 
         // Just to simulate the time of the request
@@ -344,8 +274,9 @@ export default {
       this.trackingElementTemp.elementEven = e === 'page' ? 'visit' : 'click'
     },
     handleFilter() {
+      console.log(this.pageQuery.startTime)
       this.pageQuery.page = 1
-      this.pageTrackingElement()
+      this.pageTrackingRecord()
     },
     handleModifyStatus(row, status) {
       this.$message({
@@ -395,7 +326,7 @@ export default {
         if (valid) {
           createTrackingElement(this.trackingElementTemp).then((response) => {
             console.log(response.data)
-            this.trackingElementList.unshift(response.data)
+            this.trackingRecordList.unshift(response.data)
             this.dialogFormVisible = false
             this.$notify({
               title: '成功',
@@ -420,8 +351,8 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.trackingElementTemp)
           updateTrackingElement(tempData).then((response) => {
-            const index = this.trackingElementList.findIndex(v => v.id === this.trackingElementTemp.id)
-            this.trackingElementList.splice(index, 1, response.data)
+            const index = this.trackingRecordList.findIndex(v => v.id === this.trackingElementTemp.id)
+            this.trackingRecordList.splice(index, 1, response.data)
             this.dialogFormVisible = false
             this.$notify({
               title: '成功',
@@ -441,7 +372,7 @@ export default {
           type: 'success',
           duration: 2000
         })
-        this.trackingElementList.splice(index, 1)
+        this.trackingRecordList.splice(index, 1)
       })
     },
     handleDownload() {
@@ -459,7 +390,7 @@ export default {
       })
     },
     formatJson(filterVal) {
-      return this.trackingElementList.map(v => filterVal.map(j => {
+      return this.trackingRecordList.map(v => filterVal.map(j => {
         if (j === 'timestamp') {
           return parseTime(v[j])
         } else {

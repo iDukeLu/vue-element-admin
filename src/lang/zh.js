@@ -63,6 +63,9 @@ export default {
     i18n: '国际化',
     externalLink: '外链',
     profile: '个人中心',
+    trackingData: '埋点数据',
+    trackingOriginalData: '埋点原始数据',
+    trackingCleanedData: '埋点清洗数据',
     trackingElement: '埋点元素',
     trackingConfig: '埋点配置',
     trackingElementConfig: '埋点元素配置',
@@ -136,7 +139,8 @@ export default {
     draft: '草稿',
     delete: '删除',
     cancel: '取 消',
-    confirm: '确 定'
+    confirm: '确 定',
+    clean: '清 洗'
   },
   example: {
     warning: '创建和编辑页面是不能被 keep-alive 缓存的，因为keep-alive 的 include 目前不支持根据路由来缓存，所以目前都是基于 component name 来进行缓存的。如果你想类似的实现缓存效果，可以使用 localStorage 等浏览器缓存方案。或者不要使用 keep-alive 的 include，直接缓存所有页面。详情见'
@@ -189,5 +193,13 @@ export default {
     disableStatus: '禁用状态',
     createTime: '创建时间',
     updateTime: '更新时间'
+  },
+  trackingRecord: {
+    id: 'ID',
+    data: '原始埋点数据',
+    startTime: '开始时间',
+    endTime: '结束时间',
+    cleanStatus: '清洗状态',
+    cleanResult: '清洗结果'
   }
 }

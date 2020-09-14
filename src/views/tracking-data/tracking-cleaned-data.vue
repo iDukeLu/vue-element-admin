@@ -23,7 +23,7 @@
     <el-table
       :key="tableKey"
       v-loading="listLoading"
-      :data="trackingElementList"
+      :data="trackingRecordList"
       border
       fit
       highlight-current-row
@@ -108,7 +108,7 @@
       </el-table-column>
     </el-table>
     <!-- 分页栏 -->
-    <pagination v-if="total>0" :total="total" :page.sync="pageQuery.current" :limit.sync="pageQuery.limit" @pagination="pageTrackingElement" />
+    <pagination v-if="total>0" :total="total" :page.sync="pageQuery.current" :limit.sync="pageQuery.limit" @pagination="pageTrackingRecord" />
 
     <!-- 添加/修改表单 -->
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
@@ -153,21 +153,11 @@
         </el-button>
       </div>
     </el-dialog>
-
-    <el-dialog :visible.sync="dialogPvVisible" title="Reading statistics">
-      <el-table :data="pvData" border fit highlight-current-row style="width: 100%">
-        <el-table-column prop="key" label="Channel" />
-        <el-table-column prop="pv" label="Pv" />
-      </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogPvVisible = false">{{ $t('table.confirm') }}</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import { pageTrackingElement, listTrackingElement, createTrackingElement, deleteTrackingElement, updateTrackingElement } from '@/api/tracking-element-config'
+import { pageTrackingRecord, listTrackingElement, createTrackingElement, deleteTrackingElement, updateTrackingElement } from '@/api/tracking-original-data'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -208,7 +198,7 @@ const disableStatusKeyValue = disableStatusOptions.reduce((acc, cur) => {
 }, {})
 
 export default {
-  name: 'TrackingElementConfig',
+  name: 'TrackingCleanedData',
   components: { Pagination },
   directives: { waves },
   filters: {
@@ -227,7 +217,7 @@ export default {
   data() {
     return {
       tableKey: 0,
-      trackingElementList: [],
+      trackingRecordList: [],
       belongTrackingElementList: [],
       total: 0,
       listLoading: true,
@@ -235,9 +225,9 @@ export default {
         current: 1,
         limit: 10,
         sort: '+id',
-        elementName: '',
-        elementType: '',
-        elementEven: ''
+        cleanStatus: '',
+        startTime: '',
+        endTime: ''
       },
       listQuery: {
         elementName: '',
@@ -299,13 +289,13 @@ export default {
     }
   },
   created() {
-    this.pageTrackingElement()
+    this.pageTrackingRecord()
   },
   methods: {
-    pageTrackingElement() {
+    pageTrackingRecord() {
       this.listLoading = true
-      pageTrackingElement(this.pageQuery).then(response => {
-        this.trackingElementList = response.data.records
+      pageTrackingRecord(this.pageQuery).then(response => {
+        this.trackingRecordList = response.data.records
         this.total = response.data.total
 
         // Just to simulate the time of the request
@@ -345,7 +335,7 @@ export default {
     },
     handleFilter() {
       this.pageQuery.page = 1
-      this.pageTrackingElement()
+      this.pageTrackingRecord()
     },
     handleModifyStatus(row, status) {
       this.$message({
@@ -395,7 +385,7 @@ export default {
         if (valid) {
           createTrackingElement(this.trackingElementTemp).then((response) => {
             console.log(response.data)
-            this.trackingElementList.unshift(response.data)
+            this.trackingRecordList.unshift(response.data)
             this.dialogFormVisible = false
             this.$notify({
               title: '成功',
@@ -420,8 +410,8 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.trackingElementTemp)
           updateTrackingElement(tempData).then((response) => {
-            const index = this.trackingElementList.findIndex(v => v.id === this.trackingElementTemp.id)
-            this.trackingElementList.splice(index, 1, response.data)
+            const index = this.trackingRecordList.findIndex(v => v.id === this.trackingElementTemp.id)
+            this.trackingRecordList.splice(index, 1, response.data)
             this.dialogFormVisible = false
             this.$notify({
               title: '成功',
@@ -441,7 +431,7 @@ export default {
           type: 'success',
           duration: 2000
         })
-        this.trackingElementList.splice(index, 1)
+        this.trackingRecordList.splice(index, 1)
       })
     },
     handleDownload() {
@@ -459,7 +449,7 @@ export default {
       })
     },
     formatJson(filterVal) {
-      return this.trackingElementList.map(v => filterVal.map(j => {
+      return this.trackingRecordList.map(v => filterVal.map(j => {
         if (j === 'timestamp') {
           return parseTime(v[j])
         } else {

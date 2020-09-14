@@ -9,7 +9,7 @@ const trackingConfigRouter = {
   name: 'Table',
   meta: {
     title: 'trackingConfig',
-    icon: 'table'
+    icon: 'component'
   },
   children: [
     {
@@ -19,7 +19,7 @@ const trackingConfigRouter = {
       meta: { title: 'trackingElementConfig' }
     },
     {
-      path: 'dynamic-table',
+      path: 'tracking-dimension-config',
       component: () => import('@/views/tracking-config/tracking-dimension-config'),
       name: 'TrackingDimensionConfig',
       meta: { title: 'TrackingDimensionConfig' }

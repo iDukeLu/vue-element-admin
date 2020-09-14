@@ -1,11 +1,12 @@
 <template>
   <div class="app-container">
+    <!-- 功能区 -->
     <div class="filter-container">
-      <el-input v-model="listQuery.elementName" :placeholder="$t('trackingElement.elementName')" clearable style="width: 200px; margin-right: 15px;" class="filter-item" @keyup.enter.native="handleFilter" />
-      <el-select v-model="listQuery.elementType" :placeholder="$t('trackingElement.elementType')" clearable style="width: 150px; margin-right: 15px;" class="filter-item">
+      <el-input v-model="pageQuery.elementName" :placeholder="$t('trackingElement.elementName')" clearable style="width: 200px; margin-right: 15px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-select v-model="pageQuery.elementType" :placeholder="$t('trackingElement.elementType')" clearable style="width: 150px; margin-right: 15px;" class="filter-item">
         <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
       </el-select>
-      <el-select v-model="listQuery.elementEven" :placeholder="$t('trackingElement.elementEven')" clearable class="filter-item" style="width: 150px; margin-right: 15px;">
+      <el-select v-model="pageQuery.elementEven" :placeholder="$t('trackingElement.elementEven')" clearable class="filter-item" style="width: 150px; margin-right: 15px;">
         <el-option v-for="(item, index) in elementEvenOptions" :key="index" :label="item.display_name" :value="item.value" />
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
@@ -18,7 +19,7 @@
         {{ $t('table.export') }}
       </el-button>
     </div>
-
+    <!-- 展示列表 -->
     <el-table
       :key="tableKey"
       v-loading="listLoading"
@@ -45,7 +46,7 @@
           <span class="link-type" @click="handleUpdate(row)">{{ row.belongElementCode }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('trackingElement.elementName')" min-width="270px">
+      <el-table-column :label="$t('trackingElement.elementName')" min-width="300px">
         <template slot-scope="{row}">
           <span class="link-type" @click="handleUpdate(row)">{{ row.elementName }}</span>
         </template>
@@ -95,51 +96,48 @@
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
             {{ $t('table.edit') }}
           </el-button>
-          <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleDelete(row,$index)">
-            {{ $t('table.delete') }}
-          </el-button>
+          <el-popconfirm title="确定删除该元素吗？" @onConfirm="handleDelete(row,$index)">
+            <el-button v-if="row.status!='deleted'" slot="reference" size="mini" type="danger">
+              {{ $t('table.delete') }}
+            </el-button>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分页栏 -->
+    <pagination v-if="total>0" :total="total" :page.sync="pageQuery.current" :limit.sync="pageQuery.limit" @pagination="pageTrackingElement" />
 
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.current" :limit.sync="listQuery.limit" @pagination="pageTrackingElement" />
-
+    <!-- 添加/修改表单 -->
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="trackingElementTemp" label-position="left" label-width="100px" style="width: 800px; margin-left:50px;">
-        <el-form-item :label="$t('trackingElement.elementType')">
-          <el-select v-model="trackingElementTemp.elementType" style="width: 700px;" class="filter-item" placeholder="请选择埋点元素类型" @change="handlerElementEven">
+      <el-form ref="dataForm" :rules="rules" :model="trackingElementTemp" label-position="left" label-width="120px" style="width: 800px; margin-left:50px;">
+        <el-form-item :label="$t('trackingElement.elementType')" prop="elementType">
+          <el-select v-model="trackingElementTemp.elementType" style="width: 680px;" class="filter-item" placeholder="请选择埋点元素类型" @change="handlerElementType">
             <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
           </el-select>
         </el-form-item>
-        <el-form-item v-show="trackingElementTemp.elementType !== 'page'" :label="$t('trackingElement.belongElementCode')">
-          <el-select v-model="trackingElementTemp.belongElementCode" style="width: 700px;" class="filter-item" placeholder="请选择归属的埋点元素">
-            <el-option v-for="(item, index) in elementTypeOptions" :key="index" :label="item.display_name" :value="item.value" />
+        <el-form-item v-if="trackingElementTemp.elementType !== 'page'" :label="$t('trackingElement.belongElementCode')" prop="belongElementCode">
+          <el-select v-model="trackingElementTemp.belongElementCode" style="width: 680px;" class="filter-item" placeholder="请选择归属的埋点元素" @focus="listTrackingElement" @change="handlerBelongElementCode">
+            <el-option v-for="(item, index) in belongTrackingElementList" :key="index" :label="item.elementName" :value="item.elementCode" />
           </el-select>
         </el-form-item>
         <el-form-item :label="$t('trackingElement.elementCode')" prop="elementCode">
-          <el-input v-model="trackingElementTemp.elementCode" placeholder="埋点元素的唯一编号" />
+          <el-input v-model="trackingElementTemp.elementCode" placeholder="埋点元素的唯一编号" @change="handlerElementCode" />
         </el-form-item>
         <el-form-item :label="$t('trackingElement.elementName')" prop="elementName">
           <el-input v-model="trackingElementTemp.elementName" placeholder="埋点元素的名称" />
         </el-form-item>
-        <el-form-item v-show="trackingElementTemp.elementType === 'page'" :label="$t('trackingElement.elementRoute')" prop="elementRoute">
+        <el-form-item v-if="trackingElementTemp.elementType === 'page'" :label="$t('trackingElement.elementRoute')" prop="elementRoute">
           <el-input v-model="trackingElementTemp.elementRoute" placeholder="埋点元素的路由" />
         </el-form-item>
-
-        <el-form-item :label="$t('trackingElement.elementEven')">
-          <el-select v-model="trackingElementTemp.elementEven" disabled style="width: 700px;" class="filter-item" placeholder="请选择埋点元素触发的事件">
+        <el-form-item :label="$t('trackingElement.elementEven')" prop="elementEven">
+          <el-select v-model="trackingElementTemp.elementEven" disabled style="width: 680px;" class="filter-item" placeholder="请选择埋点元素触发的事件">
             <el-option v-for="(item, index) in elementEvenOptions" :key="index" :label="item.display_name" :value="item.value" />
           </el-select>
         </el-form-item>
-
-        <!-- <el-form-item :label="$t('trackingElement.elementEven')" prop="elementEven">
-          <el-input v-model="trackingElementTemp.elementEven" placeholder="埋点元素触发的事件" />
-        </el-form-item> -->
-
         <el-form-item :label="$t('trackingElement.elementEvenResult')" prop="elementEvenResult">
           <el-input v-model="trackingElementTemp.elementEvenResult" placeholder="埋点元素触发事件的结果" />
         </el-form-item>
-        <el-form-item :label="$t('trackingElement.elementDescribe')">
+        <el-form-item :label="$t('trackingElement.elementDescribe')" prop="elementDescribe">
           <el-input v-model="trackingElementTemp.elementDescribe" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" placeholder="请输入对埋点元素的相关描述" />
         </el-form-item>
       </el-form>
@@ -152,21 +150,11 @@
         </el-button>
       </div>
     </el-dialog>
-
-    <el-dialog :visible.sync="dialogPvVisible" title="Reading statistics">
-      <el-table :data="pvData" border fit highlight-current-row style="width: 100%">
-        <el-table-column prop="key" label="Channel" />
-        <el-table-column prop="pv" label="Pv" />
-      </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialogPvVisible = false">{{ $t('table.confirm') }}</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import { pageTrackingElement, fetchPv, createArticle, updateArticle } from '@/api/tracking-element'
+import { pageTrackingElement, listTrackingElement, createTrackingElement, deleteTrackingElement, updateTrackingElement } from '@/api/tracking-element-config'
 import waves from '@/directive/waves' // waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -227,15 +215,18 @@ export default {
     return {
       tableKey: 0,
       trackingElementList: [],
+      belongTrackingElementList: [],
       total: 0,
       listLoading: true,
-      listQuery: {
+      pageQuery: {
         current: 1,
         limit: 10,
-        importance: undefined,
-        title: undefined,
-        type: undefined,
         sort: '+id',
+        elementName: '',
+        elementType: '',
+        elementEven: ''
+      },
+      listQuery: {
         elementName: '',
         elementType: '',
         elementEven: ''
@@ -247,15 +238,6 @@ export default {
       disableStatusKeyValue,
       statusOptions: ['published', 'draft', 'deleted'],
       showReviewer: false,
-      temp: {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        type: '',
-        status: 'published'
-      },
       trackingElementTemp: {
         id: '',
         elementCode: '',
@@ -289,11 +271,16 @@ export default {
         create: '创建'
       },
       dialogPvVisible: false,
-      pvData: [],
       rules: {
-        type: [{ required: true, message: 'type is required', trigger: 'change' }],
-        timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        title: [{ required: true, message: 'title is required', trigger: 'blur' }]
+        belongElementCode: [{ required: true, message: '元素代号不能为空！', trigger: 'change' }],
+        elementCode: [{ required: true, message: '元素代号不能为空！', trigger: 'blur' }],
+        elementName: [{ required: true, message: '元素名称不能为空', trigger: 'blur' }],
+        elementType: [{ required: true, message: '元素类型不能为空！', trigger: 'blur' }],
+        elementRoute: [{ required: true, message: '元素路由不能为空！', trigger: 'blur' }],
+        elementEven: [{ required: true, message: '元素事件不能为空！', trigger: 'blur' }],
+        elementEvenResult: [{ required: true, message: '元素事件结果不能为空！', trigger: 'blur' }],
+        elementDescribe: [{ required: true, message: '元素描述不能为空！', trigger: 'blur' }],
+        disableStatus: [{ required: true, message: '元素类型不能为空！', trigger: 'blur' }]
       },
       downloadLoading: false
     }
@@ -304,8 +291,7 @@ export default {
   methods: {
     pageTrackingElement() {
       this.listLoading = true
-      pageTrackingElement(this.listQuery).then(response => {
-        console.log(response)
+      pageTrackingElement(this.pageQuery).then(response => {
         this.trackingElementList = response.data.records
         this.total = response.data.total
 
@@ -315,11 +301,37 @@ export default {
         }, 0.1 * 1000)
       })
     },
-    handlerElementEven(e) {
+    listTrackingElement() {
+      this.listLoading = false
+      this.listQuery.elementType = 'page'
+      listTrackingElement(this.listQuery).then(response => {
+        this.belongTrackingElementList = response.data
+        // Just to simulate the time of the request
+        setTimeout(() => {
+          this.listLoading = false
+        }, 0.1 * 1000)
+      })
+    },
+    handlerBelongElementCode(e) {
+      this.trackingElementTemp.elementCode = e + '_'
+    },
+    handlerElementCode(e) {
+      if (this.trackingElementTemp.elementType === 'page') {
+        this.trackingElementTemp.belongElementCode = e
+      }
+      const index = e.indexOf(this.trackingElementTemp.belongElementCode)
+      if (index === -1 || index !== 0) {
+        this.$message.error('元素代号必须以归属埋点代号为前缀！')
+        this.trackingElementTemp.elementCode = this.trackingElementTemp.belongElementCode + '_'
+      }
+    },
+    handlerElementType(e) {
+      this.trackingElementTemp = {}
+      this.trackingElementTemp.elementType = e
       this.trackingElementTemp.elementEven = e === 'page' ? 'visit' : 'click'
     },
     handleFilter() {
-      this.listQuery.page = 1
+      this.pageQuery.page = 1
       this.pageTrackingElement()
     },
     handleModifyStatus(row, status) {
@@ -337,21 +349,24 @@ export default {
     },
     sortByID(order) {
       if (order === 'ascending') {
-        this.listQuery.sort = '+id'
+        this.pageQuery.sort = '+id'
       } else {
-        this.listQuery.sort = '-id'
+        this.pageQuery.sort = '-id'
       }
       this.handleFilter()
     },
     resetTemp() {
-      this.temp = {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        status: 'published',
-        type: ''
+      this.trackingElementTemp = {
+        id: '',
+        elementCode: '',
+        elementName: '',
+        belongElementCode: '',
+        elementType: 'page',
+        elementRoute: '',
+        elementEven: 'visit',
+        elementEvenResult: '',
+        elementDescribe: '',
+        disableStatus: 0
       }
     },
     handleCreate() {
@@ -365,24 +380,22 @@ export default {
     createData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
-          this.temp.author = 'vue-element-admin'
-          createArticle(this.temp).then(() => {
-            this.trackingElementList.unshift(this.temp)
+          createTrackingElement(this.trackingElementTemp).then((response) => {
+            console.log(response.data)
+            this.trackingElementList.unshift(response.data)
             this.dialogFormVisible = false
             this.$notify({
               title: '成功',
               message: '创建成功',
               type: 'success',
-              duration: 2000
+              duration: 1000
             })
           })
         }
       })
     },
     handleUpdate(row) {
-      this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
+      this.trackingElementTemp = Object.assign({}, row) // copy obj
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -392,11 +405,10 @@ export default {
     updateData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          const tempData = Object.assign({}, this.temp)
-          tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          updateArticle(tempData).then(() => {
-            const index = this.trackingElementList.findIndex(v => v.id === this.temp.id)
-            this.trackingElementList.splice(index, 1, this.temp)
+          const tempData = Object.assign({}, this.trackingElementTemp)
+          updateTrackingElement(tempData).then((response) => {
+            const index = this.trackingElementList.findIndex(v => v.id === this.trackingElementTemp.id)
+            this.trackingElementList.splice(index, 1, response.data)
             this.dialogFormVisible = false
             this.$notify({
               title: '成功',
@@ -409,18 +421,14 @@ export default {
       })
     },
     handleDelete(row, index) {
-      this.$notify({
-        title: '成功',
-        message: '删除成功',
-        type: 'success',
-        duration: 2000
-      })
-      this.trackingElementList.splice(index, 1)
-    },
-    handleFetchPv(pv) {
-      fetchPv(pv).then(response => {
-        this.pvData = response.data.pvData
-        this.dialogPvVisible = true
+      deleteTrackingElement(row.id).then(() => {
+        this.$notify({
+          title: '成功',
+          message: '删除成功',
+          type: 'success',
+          duration: 2000
+        })
+        this.trackingElementList.splice(index, 1)
       })
     },
     handleDownload() {
@@ -432,7 +440,7 @@ export default {
         excel.export_json_to_excel({
           header: tHeader,
           data,
-          filename: 'table-list'
+          filename: '埋点元素列表'
         })
         this.downloadLoading = false
       })
@@ -447,7 +455,7 @@ export default {
       }))
     },
     getSortClass: function(key) {
-      const sort = this.listQuery.sort
+      const sort = this.pageQuery.sort
       return sort === `+${key}` ? 'ascending' : 'descending'
     }
   }

@@ -25,6 +25,7 @@ import externalLinkRouter from '@/router/modules/externalLinkRouter'
 import iconRouter from '@/router/modules/iconRouter'
 import permissionRouter from '@/router/modules/permissionRouter'
 import notFoundtRouter from '@/router/modules/notFoundRouter'
+import trackingDataRouter from '@/router/modules/TrackingDataRouter'
 import trackingConfigRouter from '@/router/modules/TrackingConfigRouter'
 
 /**
@@ -163,6 +164,7 @@ export const asyncRoutes = [
   // i18nRouter,
   // externalLinkRouter,
   // 404 page must be placed at the end !!!
+  trackingDataRouter,
   trackingConfigRouter,
   notFoundtRouter
 
