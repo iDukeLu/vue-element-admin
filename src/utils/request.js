@@ -3,6 +3,10 @@ import { MessageBox, Message } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 
+const NETWORK_DICTIONARY = {
+  'Network Error': '网络错误，请稍后再试！'
+}
+
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
@@ -74,7 +78,7 @@ service.interceptors.response.use(
   error => {
     console.log('err' + error) // for debug
     Message({
-      message: error.message,
+      message: NETWORK_DICTIONARY[error.message],
       type: 'error',
       duration: 5 * 1000
     })

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 
 import Cookies from 'js-cookie'
+import dayjs from 'dayjs'
 
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
@@ -41,6 +42,11 @@ Vue.use(Element, {
 // register global utility filters
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])
+})
+
+Vue.prototype.$dayjs = dayjs
+Vue.filter('dateTimeFilter', val => {
+  return dayjs(val).format('YYYY-MM-DD hh:mm:ss')
 })
 
 Vue.config.productionTip = false

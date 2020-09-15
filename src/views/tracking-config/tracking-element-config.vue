@@ -83,12 +83,12 @@
       </el-table-column>
       <el-table-column :label="$t('trackingElement.createTime')" min-width="170px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.createTime }}</span>
+          <span class="link-type" @click="handleUpdate(row)">{{ row.createTime | dateTimeFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('trackingElement.updateTime')" min-width="170px">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.updateTime }}</span>
+          <span class="link-type" @click="handleUpdate(row)">{{ row.updateTime | dateTimeFilter }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.actions')" align="center" width="230" class-name="small-padding fixed-width">
